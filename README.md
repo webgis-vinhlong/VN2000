@@ -12,7 +12,10 @@
 - Quy ước nhập rõ ràng: **X = Northing**, **Y = Easting**; khi gọi PROJ4, ứng dụng tự đổi sang thứ tự `[Easting, Northing]`.
 - Hai chiều VN-2000 → WGS84 và WGS84 → VN-2000.
 - Nhập nhiều điểm từ Excel/CSV; xuất CSV UTF-8 có BOM.
-- Bản đồ Vietflex dùng cấu hình `useLegacyGoogleTiles: false`.
+- Bản đồ Vietflex 1.0.0 được ghim theo commit SHA; cấu hình `googleMaps: false` và `useLegacyGoogleTiles: false`, không gọi endpoint Google Tiles cũ.
+- Ba nền có thể chuyển trực tiếp: OpenStreetMap, Esri World Imagery và OpenTopoMap; mỗi lớp giữ ghi nguồn của nhà cung cấp.
+- Nhấp lên bản đồ để lấy một điểm và đối chiếu đồng thời WGS84 `(φ, λ)` với VN-2000 `(X, Y)` theo kinh tuyến đang chọn.
+- Giao diện Unicode UTF-8, chữ không chân, số tabular/monospace và phong cách bàn tính Pascal tối giản.
 - Mọi phép tính chạy trong trình duyệt, không có API thu thập tọa độ.
 - Hiển thị nhật ký tính, tham số chiếu và cơ sở toán học.
 
@@ -37,6 +40,12 @@ M02; 11.350594; 108.878556
 
 Ứng dụng chấp nhận dấu phân cách tab, chấm phẩy, phẩy hoặc khoảng trắng. Nếu dùng dấu phẩy làm phần thập phân, nên phân cách cột bằng tab hoặc dấu chấm phẩy.
 
+Trong phần **Bàn kiểm bản đồ**, có thể đổi giữa nền đường phố, vệ tinh và địa hình. Khi nhấp một vị trí trên bản đồ, ứng dụng điền tọa độ theo chiều chuyển đổi đang chọn, tính lại bằng cùng trục TM-3 và cập nhật cả hai hệ trên bảng đọc số.
+
+> Google Maps và Google Earth không phải phần mềm hay dữ liệu mã nguồn mở. Dự án dùng lõi Vietflex/Leaflet mã nguồn mở và các lớp nền nêu rõ nhà cung cấp; chế độ URL Google cũ luôn bị tắt. Nếu sau này tích hợp Google Map Tiles API chính thức, người triển khai phải tự cấu hình khóa, thanh toán, giới hạn tên miền và tuân thủ điều khoản của Google.
+
+Ứng dụng không gửi bản ghi tọa độ đến máy chủ của dự án. Tuy nhiên, giống mọi bản đồ raster trực tuyến, nhà cung cấp lớp nền nhận yêu cầu tải các ô `(z/x/y)` tương ứng vùng người dùng đang xem; vì vậy chế độ bản đồ không đồng nghĩa với hoạt động ngoại tuyến tuyệt đối.
+
 ## Chạy cục bộ
 
 ```bash
@@ -47,7 +56,17 @@ npm run serve
 
 Mở `http://localhost:8080`.
 
-Ứng dụng không cần bước build. `proj4@2.21.0` và Vietflex Map được ghim phiên bản trên jsDelivr trong `index.html`; gói npm `proj4` chỉ phục vụ kiểm thử cùng thuật toán.
+Ứng dụng không cần bước build. `proj4@2.21.0` và Vietflex Map được ghim phiên bản/commit trên jsDelivr trong `index.html`; gói npm `proj4` chỉ phục vụ kiểm thử cùng thuật toán.
+
+CDN Vietflex đang dùng:
+
+```text
+CSS https://cdn.jsdelivr.net/gh/Vietflexmap/VN@6144d565fcf236727577ab3c4471bbe49f86892f/dist/vietflex.css
+UMD https://cdn.jsdelivr.net/gh/Vietflexmap/VN@6144d565fcf236727577ab3c4471bbe49f86892f/dist/vietflex.js
+ESM https://cdn.jsdelivr.net/gh/Vietflexmap/VN@6144d565fcf236727577ab3c4471bbe49f86892f/dist/vietflex.esm.js
+```
+
+Trang hiện dùng bản UMD để tương thích trực tiếp với biến toàn cục `Vietflex`; đường dẫn ESM được công bố để người tích hợp module có thể dùng cùng bản ghim.
 
 ## Cơ sở phép chuyển đổi
 

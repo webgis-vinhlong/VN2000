@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b5d4b">
+  <meta name="theme-color" content="#172337">
   <meta name="description" content="Chuyển đổi hai chiều VN-2000 và WGS84 theo kinh tuyến trục của 34 tỉnh, thành Việt Nam. Hỗ trợ tọa độ X, Y, nhập hàng loạt và bản đồ mở.">
   <meta name="keywords" content="VN2000, WGS84, chuyển tọa độ, kinh tuyến trục, tọa độ X Y, bản đồ Việt Nam">
   <meta name="author" content="Long Ngo">
@@ -38,7 +38,7 @@
   <main id="top">
     <section class="hero">
       <div class="hero-copy">
-        <span class="eyebrow"><span class="status-dot"></span> Mã nguồn mở · Xử lý ngay trên trình duyệt</span>
+        <span class="eyebrow"><span class="status-dot"></span> Phòng tính tọa độ · Xử lý tại trình duyệt</span>
         <h1>Tọa độ đúng bắt đầu từ <em>đúng trục chiếu.</em></h1>
         <p>Chuyển đổi hai chiều giữa VN-2000 và WGS84, mặc định kinh tuyến trục hiện hành theo Thông tư 24/2025/TT-BNNMT và vẫn cho chọn trục của dữ liệu cũ khi metadata yêu cầu.</p>
         <div class="hero-actions">
@@ -48,11 +48,12 @@
         <dl class="hero-stats">
           <div><dt>34</dt><dd>Tỉnh, thành</dd></div>
           <div><dt>2 chiều</dt><dd>VN-2000 ↔ WGS84</dd></div>
-          <div><dt>0</dt><dd>Dữ liệu gửi máy chủ</dd></div>
+          <div><dt>0</dt><dd>Tọa độ lưu trữ</dd></div>
         </dl>
       </div>
-      <div class="hero-visual" aria-label="Minh họa lưới chiếu tọa độ Việt Nam">
+      <div class="hero-visual" aria-label="Bảng tính minh họa phép chuyển tọa độ Việt Nam">
         <div class="grid-globe">
+          <span class="plate-number">PROPOSITIO · XXIV</span>
           <span class="axis axis-x">Y / Easting</span>
           <span class="axis axis-y">X / Northing</span>
           <span class="point point-a"></span><span class="point point-b"></span><span class="point point-c"></span>
@@ -119,12 +120,35 @@
       </div>
     </section>
 
-    <section class="map-section section-shell" aria-labelledby="map-title">
-      <div class="map-heading"><div><span class="section-index">02</span><h2 id="map-title">Kiểm tra trực quan</h2></div><p>Nền bản đồ Vietflex không dùng lớp Google cũ; dữ liệu tọa độ chỉ tồn tại trong phiên trình duyệt.</p></div>
-      <div class="map-wrap">
-        <div id="map" role="application" aria-label="Bản đồ vị trí tọa độ"></div>
-        <div class="map-placeholder" id="map-placeholder"><span>Đang nạp bản đồ…</span></div>
-        <div class="map-overlay"><small>Điểm đang chọn</small><strong id="map-coordinate">21,028500° · 105,854200°</strong></div>
+    <section class="map-section section-shell" id="map-section" aria-labelledby="map-title">
+      <div class="map-heading"><div><span class="section-index">02</span><h2 id="map-title">Bàn kiểm bản đồ</h2></div><p>Vietflex làm lõi hiển thị; không gọi endpoint Google Tiles cũ. Ứng dụng không lưu tọa độ trên máy chủ.</p></div>
+      <div class="map-frame">
+        <div class="map-toolbar" aria-label="Chọn nền bản đồ">
+          <div class="map-layer-tabs" role="group" aria-label="Nền bản đồ">
+            <button class="map-layer-button is-active" type="button" data-map-layer="streets" aria-pressed="true">Đường phố mở</button>
+            <button class="map-layer-button" type="button" data-map-layer="satellite" aria-pressed="false">Ảnh vệ tinh</button>
+            <button class="map-layer-button" type="button" data-map-layer="terrain" aria-pressed="false">Địa hình</button>
+          </div>
+          <span class="map-engine"><i aria-hidden="true"></i> Vietflex 1.0.0 · UMD ghim SHA</span>
+        </div>
+        <div class="map-wrap">
+          <div id="map" role="application" aria-label="Bản đồ vị trí tọa độ; nhấp để lấy tọa độ"></div>
+          <div class="map-placeholder" id="map-placeholder"><span>Đang nạp Vietflex Map…</span></div>
+          <aside class="map-readout" aria-live="polite" aria-label="Tọa độ điểm trên bản đồ">
+            <div class="map-readout-head"><span>Điểm đang chọn</span><small id="map-source">OpenStreetMap</small></div>
+            <dl>
+              <div><dt>WGS84 · φ</dt><dd id="map-latitude">21,02850000°</dd></div>
+              <div><dt>WGS84 · λ</dt><dd id="map-longitude">105,85420000°</dd></div>
+              <div><dt>VN-2000 · X</dt><dd id="map-northing">—</dd></div>
+              <div><dt>VN-2000 · Y</dt><dd id="map-easting">—</dd></div>
+            </dl>
+            <div class="map-readout-foot"><span id="map-axis">λ₀ —</span><span>Nhấp bản đồ để lấy điểm</span></div>
+          </aside>
+        </div>
+        <div class="map-caption">
+          <p><strong>Nền đường phố:</strong> © OpenStreetMap contributors · <strong>Vệ tinh:</strong> Esri World Imagery · <strong>Địa hình:</strong> OpenTopoMap.</p>
+          <p>Google Maps và Google Earth không phải mã nguồn mở. Vietflex dùng <code>googleMaps: false</code>, <code>useLegacyGoogleTiles: false</code>; nhà cung cấp nền vẫn nhận yêu cầu ô bản đồ của vùng đang xem.</p>
+        </div>
       </div>
     </section>
 

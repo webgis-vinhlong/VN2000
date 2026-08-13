@@ -30,7 +30,12 @@ const elements = {
   resultTwoDms: $("#result-two-dms"),
   resultAxis: $("#result-axis"),
   mapPlaceholder: $("#map-placeholder"),
-  mapCoordinate: $("#map-coordinate"),
+  mapSource: $("#map-source"),
+  mapLatitude: $("#map-latitude"),
+  mapLongitude: $("#map-longitude"),
+  mapNorthing: $("#map-northing"),
+  mapEasting: $("#map-easting"),
+  mapAxis: $("#map-axis"),
   batchInput: $("#batch-input"),
   batchCount: $("#batch-count"),
   batchFormat: $("#batch-format"),
@@ -52,7 +57,28 @@ const state = {
   batchRows: [],
   map: null,
   mapLayers: [],
+  baseLayers: {},
+  activeBaseLayer: null,
+  mapPoint: null,
 };
+
+const MAP_LAYER_DEFINITIONS = Object.freeze({
+  streets: {
+    label: "OpenStreetMap",
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    options: { maxZoom: 19, attribution: "© OpenStreetMap contributors" },
+  },
+  satellite: {
+    label: "Esri World Imagery",
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    options: { maxZoom: 20, attribution: "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics" },
+  },
+  terrain: {
+    label: "OpenTopoMap",
+    url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    options: { maxZoom: 17, attribution: "Map data © OpenStreetMap contributors · Map style © OpenTopoMap" },
+  },
+});
 
 function initialize() {
   populateProvinces();
@@ -106,6 +132,7 @@ function updateAxisDisplay() {
   notice.innerHTML = axis.kind === "official"
     ? '<span aria-hidden="true">✓</span><p><strong>Trục hiện hành theo Thông tư 24/2025/TT-BNNMT.</strong> Phạm vi pháp lý của phụ lục là bản đồ hành chính cấp tỉnh; hồ sơ địa chính cũ vẫn phải theo metadata gốc.</p>'
     : '<span aria-hidden="true">!</span><p><strong>Bạn đang dùng trục dữ liệu kế thừa, không phải trục TT24 hiện hành.</strong> Chỉ dùng khi hồ sơ hoặc metadata gốc xác nhận đúng kinh tuyến này.</p>';
+  if (state.mapPoint && state.converter) updateMapReadout(state.mapPoint);
 }
 
 function bindEvents() {
@@ -124,6 +151,7 @@ function bindEvents() {
   $("#convert-batch").addEventListener("click", convertBatch);
   elements.downloadCsv.addEventListener("click", downloadCsv);
   elements.axisSearch.addEventListener("input", filterAxes);
+  $$("[data-map-layer]").forEach((button) => button.addEventListener("click", () => setBaseLayer(button.dataset.mapLayer)));
 }
 
 function setDirection(direction) {
@@ -184,7 +212,7 @@ function renderResult(result) {
   elements.resultOneDms.textContent = toWgs ? toDms(result.lat, "B", "N") : "X là northing trong quy ước địa chính Việt Nam";
   elements.resultTwoDms.textContent = toWgs ? toDms(result.lon, "Đ", "T") : "Y là easting, gồm false easting 500.000 m";
   elements.resultAxis.textContent = `λ₀ ${formatMeridian(result.centralMeridian)}`;
-  elements.mapCoordinate.textContent = `${formatNumber(result.lat, 6)}° · ${formatNumber(result.lon, 6)}°`;
+  updateMapReadout(result);
 }
 
 function clearResult() {
@@ -355,21 +383,84 @@ function initializeMap() {
   try {
     if (!window.Vietflex?.vietflexMap) throw new Error("Không nạp được Vietflex Map.");
     state.map = window.Vietflex.vietflexMap("map", {
+      googleMaps: false,
       useLegacyGoogleTiles: false,
       zoomControl: false,
       attributionControl: false,
     });
+    Object.entries(MAP_LAYER_DEFINITIONS).forEach(([key, definition]) => {
+      state.baseLayers[key] = new window.Vietflex.TileLayer(definition.url, definition.options);
+    });
+    setBaseLayer("streets");
     state.map.setView([16.2, 106.4], 5);
     new window.Vietflex.ZoomControl({ position: "topleft" }).addTo(state.map);
     new window.Vietflex.AttributionControl({ position: "bottomright" }).addTo(state.map);
     elements.mapPlaceholder.hidden = true;
-    const marker = new window.Vietflex.Marker([21.0285, 105.8542]).bindPopup("Hà Nội · Điểm mặc định").addTo(state.map);
+    const defaultPoint = state.converter.wgs84ToVn2000({ lat: 21.0285, lon: 105.8542 }, selectedAxis().meridian);
+    const marker = new window.Vietflex.Marker([defaultPoint.lat, defaultPoint.lon]).bindPopup("Hà Nội · Điểm mặc định").addTo(state.map);
     state.mapLayers.push(marker);
+    updateMapReadout(defaultPoint);
+    state.map.on?.("click", handleMapClick);
     setTimeout(() => state.map.invalidateSize?.(), 100);
   } catch (error) {
     elements.mapPlaceholder.hidden = false;
     elements.mapPlaceholder.innerHTML = `<span>${error.message} Công cụ chuyển đổi vẫn hoạt động bình thường.</span>`;
   }
+}
+
+function setBaseLayer(layerName) {
+  if (!state.map || !state.baseLayers[layerName]) return;
+  if (state.activeBaseLayer) {
+    try { state.map.removeLayer(state.activeBaseLayer); } catch { /* Layer may already be detached. */ }
+  }
+  state.activeBaseLayer = state.baseLayers[layerName];
+  state.activeBaseLayer.addTo(state.map);
+  elements.mapSource.textContent = MAP_LAYER_DEFINITIONS[layerName].label;
+  $$("[data-map-layer]").forEach((button) => {
+    const active = button.dataset.mapLayer === layerName;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+}
+
+function handleMapClick(event) {
+  try {
+    ensureConverter();
+    const lat = Number(event?.latlng?.lat);
+    const lon = Number(event?.latlng?.lng);
+    const projected = state.converter.wgs84ToVn2000({ lat, lon }, selectedAxis().meridian);
+    let result;
+    if (state.direction === "vn-to-wgs") {
+      elements.first.value = projected.x.toFixed(3);
+      elements.second.value = projected.y.toFixed(3);
+      result = state.converter.vn2000ToWgs84({ x: projected.x, y: projected.y }, selectedAxis().meridian);
+    } else {
+      elements.first.value = lat.toFixed(8);
+      elements.second.value = lon.toFixed(8);
+      result = projected;
+    }
+    state.lastResult = { ...result, id: "Điểm chọn trên bản đồ", ok: true };
+    renderResult(result);
+    renderTrace(result);
+    showPointsOnMap([state.lastResult]);
+  } catch (error) {
+    showToast(error.message || "Không đọc được tọa độ tại điểm đã chọn.");
+  }
+}
+
+function updateMapReadout(point) {
+  if (!point || !Number.isFinite(point.lat) || !Number.isFinite(point.lon)) return;
+  let projected = point;
+  if (!Number.isFinite(point.x) || !Number.isFinite(point.y) || point.centralMeridian !== selectedAxis().meridian) {
+    if (!state.converter) return;
+    projected = state.converter.wgs84ToVn2000({ lat: point.lat, lon: point.lon }, selectedAxis().meridian);
+  }
+  state.mapPoint = projected;
+  elements.mapLatitude.textContent = `${formatNumber(projected.lat, 8)}°`;
+  elements.mapLongitude.textContent = `${formatNumber(projected.lon, 8)}°`;
+  elements.mapNorthing.textContent = `${formatNumber(projected.x, 3)} m`;
+  elements.mapEasting.textContent = `${formatNumber(projected.y, 3)} m`;
+  elements.mapAxis.textContent = `λ₀ ${formatMeridian(selectedAxis().meridian)}`;
 }
 
 function showPointsOnMap(rows) {
@@ -392,7 +483,7 @@ function showPointsOnMap(rows) {
     state.map.fitBounds(coordinates, { padding: [34, 34] });
   }
   const first = rows.find(({ ok }) => ok);
-  if (first) elements.mapCoordinate.textContent = `${formatNumber(first.lat, 6)}° · ${formatNumber(first.lon, 6)}°`;
+  if (first) updateMapReadout(first);
 }
 
 function clearMapLayers() {
