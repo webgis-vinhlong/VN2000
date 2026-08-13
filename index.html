@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b5d4b">
+  <meta name="description" content="Chuyển đổi hai chiều VN-2000 và WGS84 theo kinh tuyến trục của 34 tỉnh, thành Việt Nam. Hỗ trợ tọa độ X, Y, nhập hàng loạt và bản đồ mở.">
+  <meta name="keywords" content="VN2000, WGS84, chuyển tọa độ, kinh tuyến trục, tọa độ X Y, bản đồ Việt Nam">
+  <meta name="author" content="Long Ngo">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="VN2000 Lab — Chuyển đổi tọa độ Việt Nam">
+  <meta property="og:description" content="Công cụ nguồn mở chuyển đổi VN-2000 ↔ WGS84 cho 34 tỉnh, thành.">
+  <title>VN2000 Lab — Chuyển đổi VN-2000 ↔ WGS84 cho 34 tỉnh, thành</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Vietflexmap/VN@6144d565fcf236727577ab3c4471bbe49f86892f/dist/vietflex.css">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/proj4@2.21.0/dist/proj4.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/gh/Vietflexmap/VN@6144d565fcf236727577ab3c4471bbe49f86892f/dist/vietflex.js"></script>
+  <script type="module" src="assets/js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#converter">Bỏ qua đến công cụ</a>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="VN2000 Lab - Trang đầu">
+      <span class="brand-mark" aria-hidden="true">VN</span>
+      <span><strong>VN2000</strong><small>Coordinate Lab</small></span>
+    </a>
+    <nav aria-label="Điều hướng chính">
+      <a href="#converter">Chuyển đổi</a>
+      <a href="#batch">Hàng loạt</a>
+      <a href="#method">Cách tính</a>
+      <a href="#axes">34 tỉnh, thành</a>
+    </nav>
+    <a class="button button-ghost header-cta" href="https://github.com/webgis-vinhlong/VN2000" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow"><span class="status-dot"></span> Mã nguồn mở · Xử lý ngay trên trình duyệt</span>
+        <h1>Tọa độ đúng bắt đầu từ <em>đúng trục chiếu.</em></h1>
+        <p>Chuyển đổi hai chiều giữa VN-2000 và WGS84, quản lý kinh tuyến trục theo 34 tỉnh, thành sau sắp xếp và giữ nguyên lựa chọn theo địa bàn dữ liệu cũ.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#converter">Bắt đầu chuyển đổi</a>
+          <a class="text-link" href="#method">Hiểu cách tính <span aria-hidden="true">→</span></a>
+        </div>
+        <dl class="hero-stats">
+          <div><dt>34</dt><dd>Tỉnh, thành</dd></div>
+          <div><dt>2 chiều</dt><dd>VN-2000 ↔ WGS84</dd></div>
+          <div><dt>0</dt><dd>Dữ liệu gửi máy chủ</dd></div>
+        </dl>
+      </div>
+      <div class="hero-visual" aria-label="Minh họa lưới chiếu tọa độ Việt Nam">
+        <div class="grid-globe">
+          <span class="axis axis-x">Y / Easting</span>
+          <span class="axis axis-y">X / Northing</span>
+          <span class="point point-a"></span><span class="point point-b"></span><span class="point point-c"></span>
+          <div class="coordinate-tag"><small>VN-2000</small><strong>X 1.255.172,510</strong><strong>Y 568.262,924</strong></div>
+          <div class="wgs-tag"><small>WGS84</small><strong>11,349358° · 108,877201°</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="workspace section-shell" id="converter" aria-labelledby="converter-title">
+      <div class="section-heading">
+        <div><span class="section-index">01</span><h2 id="converter-title">Chuyển đổi tọa độ</h2></div>
+        <p>Chọn đúng tỉnh và khu vực tạo dữ liệu trước khi nhập X, Y.</p>
+      </div>
+
+      <div class="converter-layout">
+        <form class="converter-card" id="single-form" novalidate>
+          <div class="direction-tabs" role="tablist" aria-label="Chiều chuyển đổi">
+            <button class="direction-tab is-active" type="button" role="tab" aria-selected="true" data-direction="vn-to-wgs">VN-2000 <span>→</span> WGS84</button>
+            <button class="direction-tab" type="button" role="tab" aria-selected="false" data-direction="wgs-to-vn">WGS84 <span>→</span> VN-2000</button>
+          </div>
+
+          <div class="field-grid">
+            <label class="field"><span>Tỉnh / thành phố <b>*</b></span><select id="province" required></select></label>
+            <label class="field"><span>Khu vực dữ liệu / kinh tuyến trục <b>*</b></span><select id="axis" required></select></label>
+          </div>
+          <div class="projection-strip" aria-live="polite">
+            <div><small>Kinh tuyến trục λ₀</small><strong id="meridian-display">—</strong></div>
+            <div><small>Múi chiếu</small><strong>3°</strong></div>
+            <div><small>Hệ số k₀</small><strong>0,9999</strong></div>
+            <div><small>False easting</small><strong>500.000 m</strong></div>
+          </div>
+
+          <div class="coordinate-fields" id="coordinate-fields">
+            <label class="field field-large"><span id="first-label">X — Northing (m) <b>*</b></span><input id="first-coordinate" inputmode="decimal" autocomplete="off" value="1255172.510" required><small id="first-help">Khoảng cách theo hướng Bắc, thường có 7 chữ số</small></label>
+            <label class="field field-large"><span id="second-label">Y — Easting (m) <b>*</b></span><input id="second-coordinate" inputmode="decimal" autocomplete="off" value="568262.924" required><small id="second-help">Khoảng cách hướng Đông đã cộng 500.000 m</small></label>
+          </div>
+
+          <div class="notice notice-warning" id="axis-notice"><span aria-hidden="true">!</span><p><strong>Không chọn trục chỉ theo tên tỉnh mới.</strong> Hãy đối chiếu khu vực đo đạc ghi trên hồ sơ hoặc siêu dữ liệu gốc.</p></div>
+          <p class="form-error" id="single-error" role="alert"></p>
+          <button class="button button-primary button-block" type="submit">Chuyển đổi tọa độ <span aria-hidden="true">→</span></button>
+        </form>
+
+        <article class="result-card" aria-live="polite">
+          <div class="result-header"><span>Kết quả</span><span class="result-badge" id="result-badge">Chờ dữ liệu</span></div>
+          <div class="empty-result" id="empty-result">
+            <div class="target-icon" aria-hidden="true">＋</div>
+            <h3>Kết quả sẽ xuất hiện tại đây</h3>
+            <p>Dùng điểm mẫu hoặc nhập tọa độ của bạn.</p>
+          </div>
+          <div class="result-content" id="result-content" hidden>
+            <div class="result-location"><small id="result-province">—</small><h3 id="result-title">—</h3></div>
+            <div class="result-values">
+              <div><small id="result-one-label">Vĩ độ</small><strong id="result-one">—</strong><span id="result-one-dms"></span></div>
+              <div><small id="result-two-label">Kinh độ</small><strong id="result-two">—</strong><span id="result-two-dms"></span></div>
+            </div>
+            <div class="quality-row"><span><i></i> Phép tính hoàn tất</span><span id="result-axis">—</span></div>
+            <div class="result-actions">
+              <button class="button button-soft" id="copy-result" type="button">Sao chép</button>
+              <button class="button button-soft" id="show-map" type="button">Xem trên bản đồ</button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="map-section section-shell" aria-labelledby="map-title">
+      <div class="map-heading"><div><span class="section-index">02</span><h2 id="map-title">Kiểm tra trực quan</h2></div><p>Nền bản đồ Vietflex không dùng lớp Google cũ; dữ liệu tọa độ chỉ tồn tại trong phiên trình duyệt.</p></div>
+      <div class="map-wrap">
+        <div id="map" role="application" aria-label="Bản đồ vị trí tọa độ"></div>
+        <div class="map-placeholder" id="map-placeholder"><span>Đang nạp bản đồ…</span></div>
+        <div class="map-overlay"><small>Điểm đang chọn</small><strong id="map-coordinate">21,028500° · 105,854200°</strong></div>
+      </div>
+    </section>
+
+    <section class="batch-section section-shell" id="batch" aria-labelledby="batch-title">
+      <div class="section-heading">
+        <div><span class="section-index">03</span><h2 id="batch-title">Chuyển đổi hàng loạt</h2></div>
+        <p>Dán từ Excel/CSV; chấp nhận tab, dấu chấm phẩy, dấu phẩy hoặc khoảng trắng.</p>
+      </div>
+      <div class="batch-layout">
+        <div class="batch-input-panel">
+          <div class="panel-toolbar"><strong id="batch-format">Định dạng: mã điểm; X; Y</strong><button type="button" class="text-button" id="load-sample">Nạp dữ liệu mẫu</button></div>
+          <textarea id="batch-input" spellcheck="false" aria-label="Tọa độ nhập hàng loạt" placeholder="M01; 1255172.510; 568262.924&#10;M02; 1255310.120; 568410.500"></textarea>
+          <div class="batch-footer"><span id="batch-count">0 dòng dữ liệu</span><button class="button button-primary" id="convert-batch" type="button">Chuyển đổi tất cả</button></div>
+          <p class="form-error" id="batch-error" role="alert"></p>
+        </div>
+        <div class="batch-result-panel">
+          <div class="panel-toolbar"><strong>Kết quả</strong><button type="button" class="text-button" id="download-csv" disabled>Tải CSV ↓</button></div>
+          <div class="table-scroll">
+            <table>
+              <thead id="batch-head"><tr><th>Mã</th><th>Vĩ độ</th><th>Kinh độ</th><th>Trạng thái</th></tr></thead>
+              <tbody id="batch-body"><tr class="table-empty"><td colspan="4">Chưa có dữ liệu chuyển đổi</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="method-section section-shell" id="method" aria-labelledby="method-title">
+      <div class="section-heading method-heading">
+        <div><span class="section-index">04</span><h2 id="method-title">Cơ sở toán học</h2></div>
+        <p>Không phải “đổi đơn vị”: đây là chuỗi phép chiếu nghịch/thuận và chuyển datum trong không gian 3D.</p>
+      </div>
+      <ol class="pipeline">
+        <li><span>1</span><div><small>Phép chiếu</small><h3>Transverse Mercator 3°</h3><p>Tách false easting/northing, dùng λ₀ theo khu vực, k₀ = 0,9999 và elipsoid WGS84 để đổi giữa mặt phẳng (E, N) và địa lý VN-2000 (φ, λ).</p></div></li>
+        <li><span>2</span><div><small>Không gian 3D</small><h3>Địa lý ↔ địa tâm</h3><p>Từ φ, λ, h tính (X<sub>c</sub>, Y<sub>c</sub>, Z<sub>c</sub>) với bán trục lớn a = 6.378.137 m và độ dẹt nghịch 298,257223563.</p></div></li>
+        <li><span>3</span><div><small>Chuyển datum</small><h3>Helmert 7 tham số</h3><p>Áp dụng 3 tịnh tiến, 3 góc xoay và hệ số tỷ lệ để nối datum VN-2000 với WGS84; chiều ngược dùng phép biến đổi nghịch đảo.</p></div></li>
+        <li><span>4</span><div><small>Kết quả</small><h3>Kiểm tra và định dạng</h3><p>Trả về độ thập phân, DMS hoặc X/Y; kiểm tra miền Việt Nam và độ ổn định khi chuyển khứ hồi.</p></div></li>
+      </ol>
+
+      <div class="formula-grid">
+        <article class="formula-card"><small>Bán kính pháp tuyến</small><code>ν = a / √(1 − e²sin²φ)</code><p>Dùng để chuyển tọa độ trắc địa sang tọa độ địa tâm.</p></article>
+        <article class="formula-card"><small>Tọa độ địa tâm</small><code>X<sub>c</sub> = (ν + h)cosφcosλ</code><p>Hai thành phần còn lại lần lượt dùng sinλ và (1 − e²)ν.</p></article>
+        <article class="formula-card"><small>Helmert rút gọn</small><code>V<sub>WGS</sub> = T + (1 + s)R·V<sub>VN</sub></code><p>Góc xoay đổi từ giây cung sang radian, s đổi từ ppm sang tỷ lệ.</p></article>
+      </div>
+
+      <details class="parameters" open>
+        <summary>Tham số đang dùng</summary>
+        <div class="parameter-table-wrap"><table><thead><tr><th>Nhóm</th><th>Tham số</th><th>Giá trị</th><th>Đơn vị</th></tr></thead><tbody>
+          <tr><td>Elipsoid</td><td>a</td><td>6.378.137</td><td>m</td></tr>
+          <tr><td>Elipsoid</td><td>1/f</td><td>298,257223563</td><td>—</td></tr>
+          <tr><td>TM-3</td><td>λ₀</td><td id="parameter-meridian">Theo khu vực</td><td>độ</td></tr>
+          <tr><td>TM-3</td><td>k₀ / E₀ / N₀</td><td>0,9999 / 500.000 / 0</td><td>— / m / m</td></tr>
+          <tr><td>Helmert</td><td>ΔX / ΔY / ΔZ</td><td>−191,90441429 / −39,30318279 / −111,45032835</td><td>m</td></tr>
+          <tr><td>Helmert</td><td>rX / rY / rZ</td><td>−0,00928836 / 0,01975479 / −0,00427372</td><td>giây cung</td></tr>
+          <tr><td>PROJ</td><td>rX / rY / rZ sau đổi quy ước</td><td>0,00928836 / −0,01975479 / 0,00427372</td><td>giây cung</td></tr>
+          <tr><td>Helmert</td><td>s</td><td>0,252906278</td><td>ppm</td></tr>
+        </tbody></table></div>
+      </details>
+
+      <aside class="calculation-trace" id="calculation-trace">
+        <div><span class="trace-label">Minh bạch phép tính</span><h3>Nhật ký điểm gần nhất</h3></div>
+        <ol id="trace-steps"><li>Chưa có phép chuyển đổi. Hãy chạy một điểm để xem các bước và tham số thực tế.</li></ol>
+      </aside>
+    </section>
+
+    <section class="axes-section section-shell" id="axes" aria-labelledby="axes-title">
+      <div class="section-heading">
+        <div><span class="section-index">05</span><h2 id="axes-title">Trục tọa độ 34 tỉnh, thành</h2></div>
+        <p>Tỉnh mới có thể chứa nhiều trục vì dữ liệu địa chính cũ không tự động đổi theo địa giới hành chính.</p>
+      </div>
+      <div class="axes-toolbar"><label class="search-field"><span aria-hidden="true">⌕</span><input id="axis-search" type="search" placeholder="Tìm tỉnh, địa bàn cũ hoặc kinh tuyến…" aria-label="Tìm trong bảng kinh tuyến trục"></label><span id="axis-table-count">34 tỉnh, thành</span></div>
+      <div class="axes-table-wrap"><table><thead><tr><th>Tỉnh / thành hiện hành</th><th>Kinh tuyến trục</th><th>Phạm vi dữ liệu kế thừa</th></tr></thead><tbody id="axes-table-body"></tbody></table></div>
+      <p class="data-note"><strong>Lưu ý nghiệp vụ:</strong> bảng giúp chọn cấu hình, không thay thế hồ sơ kỹ thuật, metadata hoặc xác nhận của cơ quan đo đạc. Nếu tài liệu ghi rõ λ₀ khác, phải ưu tiên tài liệu gốc.</p>
+    </section>
+
+    <section class="references section-shell" aria-labelledby="references-title">
+      <div class="section-heading"><div><span class="section-index">06</span><h2 id="references-title">Tài liệu tham khảo</h2></div><p>Trình bày theo APA rút gọn; liên kết dẫn đến nguồn pháp lý và tài liệu kỹ thuật.</p></div>
+      <ol>
+        <li>Thủ tướng Chính phủ. (2000). <a href="https://vanban.chinhphu.vn/?docid=7812&pageid=27160" target="_blank" rel="noreferrer"><em>Quyết định 83/2000/QĐ-TTg về sử dụng Hệ quy chiếu và Hệ tọa độ quốc gia Việt Nam</em></a>.</li>
+        <li>Quốc hội. (2025). <a href="https://quochoi.vn/content/tintuc/Lists/News/Attachments/94532/NQ%20202%20%281%29.pdf" target="_blank" rel="noreferrer"><em>Nghị quyết 202/2025/QH15 về sắp xếp đơn vị hành chính cấp tỉnh</em></a>.</li>
+        <li>PROJ contributors. (2026). <a href="https://proj.org/en/stable/tutorials/EUREF2019/exercises/pipelines.html" target="_blank" rel="noreferrer"><em>Transformation pipelines</em></a>.</li>
+        <li>PROJ contributors. (2026). <a href="https://proj.org/en/stable/operations/transformations/helmert.html" target="_blank" rel="noreferrer"><em>Helmert transform: Coordinate-frame and position-vector conventions</em></a>.</li>
+        <li>EPSG Geodetic Parameter Dataset. (2025). <a href="https://epsg.io/9218" target="_blank" rel="noreferrer"><em>VN-2000 / TM-3 108-30 (EPSG:9218)</em></a>.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-brand"><span class="brand-mark" aria-hidden="true">VN</span><div><strong>VN2000 Coordinate Lab</strong><p>Công cụ giáo dục và hỗ trợ kiểm tra tọa độ.</p></div></div>
+    <div><small>Phát triển bởi</small><strong>Long Ngo</strong></div>
+    <div><small>Giấy phép</small><a href="LICENSE">MIT License</a></div>
+    <div><small>Mã nguồn</small><a href="https://github.com/webgis-vinhlong/VN2000" target="_blank" rel="noreferrer">webgis-vinhlong/VN2000 ↗</a></div>
+  </footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
