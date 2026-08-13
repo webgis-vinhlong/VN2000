@@ -1,13 +1,14 @@
 # VN2000 Coordinate Lab
 
-Ứng dụng web tĩnh, mã nguồn mở để chuyển đổi hai chiều **VN-2000 ↔ WGS84** theo kinh tuyến trục địa chính, hỗ trợ 34 tỉnh/thành hiện hành của Việt Nam, tọa độ `X, Y`, nhập hàng loạt và kiểm tra trực quan trên Vietflex Map.
+Ứng dụng web tĩnh, mã nguồn mở để chuyển đổi hai chiều **VN-2000 ↔ WGS84**, hỗ trợ 34 tỉnh/thành hiện hành của Việt Nam, tọa độ `X, Y`, nhập hàng loạt và kiểm tra trực quan trên Vietflex Map. Kinh tuyến mặc định được đối sánh với Phụ lục Thông tư 24/2025/TT-BNNMT; trục của dữ liệu cũ được giữ thành lựa chọn riêng.
 
 > Phát triển bởi **Long Ngo** · Giấy phép [MIT](LICENSE)
 
 ## Điểm khác biệt
 
 - Danh mục đúng **34 đơn vị hành chính cấp tỉnh** sau Nghị quyết 202/2025/QH15.
-- Không gán tùy tiện một trục cho tỉnh mới: các kinh tuyến trục của địa bàn trước sắp xếp được giữ thành lựa chọn riêng.
+- Mặc định đúng một trục hiện hành cho mỗi tỉnh theo Phụ lục Thông tư 24/2025/TT-BNNMT.
+- Không làm mất khả năng đọc hồ sơ cũ: các kinh tuyến khác của địa bàn trước sắp xếp được ghi rõ là **dữ liệu kế thừa**.
 - Quy ước nhập rõ ràng: **X = Northing**, **Y = Easting**; khi gọi PROJ4, ứng dụng tự đổi sang thứ tự `[Easting, Northing]`.
 - Hai chiều VN-2000 → WGS84 và WGS84 → VN-2000.
 - Nhập nhiều điểm từ Excel/CSV; xuất CSV UTF-8 có BOM.
@@ -18,7 +19,7 @@
 ## Cách dùng
 
 1. Chọn tỉnh/thành hiện hành.
-2. Chọn **khu vực dữ liệu gốc** và kinh tuyến trục tương ứng.
+2. Giữ lựa chọn **TT24 · hiện hành** cho bản đồ hành chính cấp tỉnh hoặc chọn **Dữ liệu cũ** khi hồ sơ/metadata gốc xác nhận một trục khác.
 3. Chọn chiều chuyển đổi.
 4. Nhập một điểm hoặc dán nhiều dòng theo một trong các mẫu:
 
@@ -71,21 +72,34 @@ Chiều ngược dùng các phép biến đổi nghịch đảo theo thứ tự 
 
 Ba góc quay công bố trong bộ tham số và các workbook tham chiếu là `−0,00928836; +0,01975479; −0,00427372` theo quy ước **coordinate-frame** (EPSG:9607). `+towgs84` của PROJ4 dùng **position-vector** (EPSG:9606), nên mã nguồn đổi dấu ba góc thành `+; −; +`. Hai quy ước cho cùng kết quả khi chuyển đổi dấu đúng; nếu chép nguyên dấu sẽ tạo sai khác khoảng 0,5 m ở điểm kiểm thử.
 
-## 34 tỉnh/thành và dữ liệu trước sắp xếp
+## 34 tỉnh/thành: trục hiện hành và dữ liệu trước sắp xếp
 
-Tên tỉnh hiện hành và thành phần trước sắp xếp được lấy theo Nghị quyết 202/2025/QH15. Kinh tuyến trục là thuộc tính của hệ tọa độ đã dùng để tạo dữ liệu, không phải thuộc tính tự động thay đổi cùng tên đơn vị hành chính. Vì vậy:
+Tên tỉnh hiện hành và thành phần trước sắp xếp được lấy theo Nghị quyết 202/2025/QH15. Phụ lục Thông tư 24/2025/TT-BNNMT quy định một kinh tuyến trục cho **bản đồ hành chính cấp tỉnh** của từng đơn vị, có hiệu lực từ 01/07/2025. Điều 16 của Thông tư đồng thời quy định chuyển tiếp cho hạng mục, sản phẩm đã được kiểm tra chất lượng trước thời điểm hiệu lực.
 
-- tỉnh mới có thể có một trục nếu các địa bàn thành phần dùng cùng cấu hình;
-- tỉnh mới có thể có hai hoặc ba trục nếu dữ liệu được kế thừa từ nhiều hệ TM-3;
+Vì kinh tuyến trục còn là thuộc tính của hệ tọa độ đã dùng để tạo dữ liệu, tên tỉnh mới không tự động tái chiếu hồ sơ cũ. Ứng dụng áp dụng nguyên tắc:
+
+- lựa chọn đầu tiên luôn là trục hiện hành TT24;
+- trục khác chỉ xuất hiện dưới nhãn **Dữ liệu kế thừa**;
 - hồ sơ kỹ thuật/metadata gốc luôn có ưu tiên cao hơn lựa chọn mặc định của giao diện.
 
-Ví dụ, TP. Hồ Chí Minh hiện hành cho phép chọn `105°45′` đối với dữ liệu TP.HCM/Bình Dương cũ và `107°45′` đối với dữ liệu Bà Rịa–Vũng Tàu cũ.
+Ví dụ, TP. Hồ Chí Minh có trục hiện hành `105°45′` theo TT24; ứng dụng vẫn cho chọn `107°45′` đối với dữ liệu kế thừa từ Bà Rịa–Vũng Tàu khi metadata gốc yêu cầu.
+
+### Các mặc định đã sửa sau đối sánh TT24
+
+| Tỉnh/thành | Mặc định từ danh mục dữ liệu cũ | Trục hiện hành TT24 |
+|---|---:|---:|
+| Bắc Ninh | 105°30′ | **107°00′** |
+| Gia Lai | 108°30′ | **108°15′** |
+| Lai Châu | 103°00′ | **104°45′** |
+| Quảng Trị | 106°15′ | **106°00′** |
+| Tây Ninh | 105°30′ | **105°45′** |
 
 ## Kiểm thử
 
 Bộ kiểm thử hiện có:
 
-- xác nhận đúng 34 tỉnh/thành, không trùng tên và mọi kinh tuyến nằm trong miền hợp lệ;
+- đối sánh đủ 34 tỉnh/thành và 34 kinh tuyến hiện hành với phụ lục TT24;
+- xác nhận trục hiện hành luôn là lựa chọn đầu tiên, không bị trục kế thừa ghi đè;
 - đối chiếu điểm mẫu Ninh Thuận từ workbook tham chiếu;
 - kiểm tra chuyển đổi khứ hồi hai chiều;
 - kiểm tra định dạng độ–phút–giây.
@@ -96,11 +110,13 @@ npm test
 
 ## Giới hạn sử dụng
 
-Đây là công cụ giáo dục và hỗ trợ kiểm tra. Kết quả có thể sai nếu nhầm trục, nhầm thứ tự X/Y, dùng múi 6°/UTM thay vì TM-3, hoặc dữ liệu gốc dùng bộ tham số cục bộ. Không dùng kết quả làm căn cứ pháp lý để xác định ranh giới thửa đất nếu chưa được đơn vị đo đạc có thẩm quyền kiểm tra.
+Đây là công cụ giáo dục và hỗ trợ kiểm tra. Phụ lục TT24 có phạm vi là kinh tuyến trục của **bản đồ hành chính cấp tỉnh**, không phải tuyên bố tự động thay trục của mọi bản đồ địa chính và hồ sơ lịch sử. Kết quả có thể sai nếu nhầm trục, nhầm thứ tự X/Y, dùng múi 6°/UTM thay vì TM-3, hoặc dữ liệu gốc dùng bộ tham số cục bộ. Không dùng kết quả làm căn cứ pháp lý để xác định ranh giới thửa đất nếu chưa được đơn vị đo đạc có thẩm quyền kiểm tra.
 
 ## Tài liệu tham khảo
 
 - EPSG Geodetic Parameter Dataset. (2025). *VN-2000 / TM-3 108-30 (EPSG:9218).* https://epsg.io/9218
+- Bộ Nông nghiệp và Môi trường. (2025). *Thông tư 24/2025/TT-BNNMT — Phụ lục quy định về kinh tuyến trục của bản đồ hành chính cấp tỉnh.* https://vanban.chinhphu.vn/?docid=214096&pageid=27160
+- Công báo Chính phủ. (2025). *Thông tư 24/2025/TT-BNNMT, Công báo số 937 + 938.* https://congbao.chinhphu.vn/van-ban/thong-tu-so-24-2025-tt-bnnmt-45474/57513.htm
 - PROJ contributors. (2026). *Transformation pipelines.* https://proj.org/en/stable/tutorials/EUREF2019/exercises/pipelines.html
 - PROJ contributors. (2026). *Helmert transform: Coordinate-frame and position-vector conventions.* https://proj.org/en/stable/operations/transformations/helmert.html
 - Quốc hội. (2025). *Nghị quyết 202/2025/QH15 về sắp xếp đơn vị hành chính cấp tỉnh.* https://quochoi.vn/content/tintuc/Lists/News/Attachments/94532/NQ%20202%20%281%29.pdf
