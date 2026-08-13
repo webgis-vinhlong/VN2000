@@ -109,6 +109,8 @@ h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp
 .notice p { margin: 0; font-size: .76rem; }
 .notice-warning { color: #73511a; border: 1px solid #ead9b3; background: #fff8e9; }
 .notice-warning > span { color: #fff; background: var(--amber); }
+.notice-official { color: #175e4c; border: 1px solid #b9d9cd; background: #edf8f3; }
+.notice-official > span { color: #fff; background: var(--green-700); }
 .form-error { min-height: 1.25em; margin: 0 0 8px; color: var(--danger); font-size: .78rem; }
 .result-card { display: flex; min-height: 565px; flex-direction: column; }
 .result-header { display: flex; padding: 21px 23px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); font-weight: 800; }
@@ -191,6 +193,7 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .axes-table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--white); }
 .axes-table-wrap td:first-child { font-weight: 800; }
 .axis-pill { display: inline-block; margin: 2px 5px 2px 0; padding: 4px 8px; color: var(--green-800); border: 1px solid #bfd7ce; border-radius: 20px; background: #edf7f2; font: 750 .7rem/1 ui-monospace, monospace; }
+.axis-pill-official { color: #fff; border-color: var(--green-800); background: var(--green-800); }
 .data-note { margin: 15px 0 0; padding: 15px 17px; color: #655021; border-left: 3px solid var(--amber); background: #fff8e8; font-size: .78rem; }
 .references { padding-top: 35px; }
 .references ol { display: grid; gap: 12px; margin: 0; padding-left: 24px; }

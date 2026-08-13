@@ -82,7 +82,7 @@ function populateAxes() {
   elements.axis.replaceChildren(...province.axes.map((axis, index) => {
     const option = document.createElement("option");
     option.value = String(index);
-    option.textContent = `${axis.areas} — ${formatMeridian(axis.meridian)}`;
+    option.textContent = `${axis.kind === "official" ? "[TT24 · hiện hành]" : "[Dữ liệu cũ]"} ${formatMeridian(axis.meridian)} — ${axis.areas}`;
     return option;
   }));
   updateAxisDisplay();
@@ -100,6 +100,12 @@ function updateAxisDisplay() {
   const axis = selectedAxis();
   elements.meridian.textContent = `${formatMeridian(axis.meridian)} (${formatNumber(axis.meridian, 2)}°)`;
   elements.parameterMeridian.textContent = `${formatMeridian(axis.meridian)} — ${axis.areas}`;
+  const notice = $("#axis-notice");
+  notice.classList.toggle("notice-official", axis.kind === "official");
+  notice.classList.toggle("notice-warning", axis.kind !== "official");
+  notice.innerHTML = axis.kind === "official"
+    ? '<span aria-hidden="true">✓</span><p><strong>Trục hiện hành theo Thông tư 24/2025/TT-BNNMT.</strong> Phạm vi pháp lý của phụ lục là bản đồ hành chính cấp tỉnh; hồ sơ địa chính cũ vẫn phải theo metadata gốc.</p>'
+    : '<span aria-hidden="true">!</span><p><strong>Bạn đang dùng trục dữ liệu kế thừa, không phải trục TT24 hiện hành.</strong> Chỉ dùng khi hồ sơ hoặc metadata gốc xác nhận đúng kinh tuyến này.</p>';
 }
 
 function bindEvents() {
@@ -169,7 +175,7 @@ function renderResult(result) {
   elements.resultContent.hidden = false;
   elements.resultBadge.textContent = "Đã chuyển đổi";
   elements.resultBadge.classList.add("is-ready");
-  elements.resultProvince.textContent = `${selectedProvince().shortName || selectedProvince().name} · ${selectedAxis().areas}`;
+  elements.resultProvince.textContent = `${selectedProvince().shortName || selectedProvince().name} · ${selectedAxis().kind === "official" ? "TT24 hiện hành" : "Dữ liệu kế thừa"}`;
   elements.resultTitle.textContent = toWgs ? "WGS84 / EPSG:4326" : `VN-2000 / TM-3 ${formatMeridian(result.centralMeridian)}`;
   elements.resultOneLabel.textContent = toWgs ? "Vĩ độ / Latitude" : "X / Northing";
   elements.resultTwoLabel.textContent = toWgs ? "Kinh độ / Longitude" : "Y / Easting";
@@ -402,16 +408,23 @@ function renderAxisTable(provinces) {
     const row = document.createElement("tr");
     const name = document.createElement("td");
     name.textContent = province.shortName || province.name;
-    const meridians = document.createElement("td");
-    [...new Set(province.axes.map(({ meridian }) => meridian))].forEach((meridian) => {
+    const official = document.createElement("td");
+    const officialPill = document.createElement("span");
+    officialPill.className = "axis-pill axis-pill-official";
+    officialPill.textContent = formatMeridian(province.officialMeridian);
+    official.append(officialPill);
+    const legacy = document.createElement("td");
+    const alternatives = province.legacyAxes.filter(({ meridian }) => meridian !== province.officialMeridian);
+    if (!alternatives.length) legacy.textContent = "Không có trục khác trong danh mục đối sánh";
+    alternatives.forEach(({ meridian, areas }) => {
+      const line = document.createElement("div");
       const pill = document.createElement("span");
       pill.className = "axis-pill";
       pill.textContent = formatMeridian(meridian);
-      meridians.append(pill);
+      line.append(pill, document.createTextNode(areas));
+      legacy.append(line);
     });
-    const areas = document.createElement("td");
-    areas.textContent = province.axes.map(({ areas }) => areas).join("; ");
-    row.append(name, meridians, areas);
+    row.append(name, official, legacy);
     return row;
   }));
   elements.axisTableCount.textContent = `${provinces.length} tỉnh, thành`;
