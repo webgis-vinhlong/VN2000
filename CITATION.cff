@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "Nếu sử dụng VN2000 Coordinate Lab, vui lòng trích dẫn phần mềm này."
+title: "VN2000 Coordinate Lab"
+type: software
+authors:
+  - family-names: "Ngo"
+    given-names: "Long"
+repository-code: "https://github.com/webgis-vinhlong/VN2000"
+license: MIT
+version: 1.0.0
+date-released: 2026-08-13
+keywords:
+  - VN-2000
+  - WGS84
+  - coordinate transformation
+  - Vietnam
