@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import proj4 from "proj4";
 import { createConverter, projectionDefinition, toDms } from "../assets/js/transform.js";
 import { PROVINCES_34, TT24 } from "../assets/js/provinces.js";
@@ -59,4 +60,23 @@ test("chuyển đổi hai chiều ổn định ở mức milimét", () => {
 test("định dạng DMS giữ đúng bán cầu", () => {
   assert.match(toDms(21.0285, "B", "N"), /21° 01′/);
   assert.match(toDms(105.8542, "Đ", "T"), /105° 51′/);
+});
+
+test("Vietflex dùng bản ghim, lớp nền có nguồn và không gọi Google Tiles cũ", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const app = readFileSync(new URL("../assets/js/app.js", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../assets/css/app.css", import.meta.url), "utf8");
+  const pinned = "Vietflexmap/VN@6144d565fcf236727577ab3c4471bbe49f86892f/dist/vietflex";
+
+  assert.match(html, /<meta charset="utf-8">/);
+  assert.ok(html.includes(`${pinned}.css`));
+  assert.ok(html.includes(`${pinned}.js`));
+  assert.match(app, /googleMaps:\s*false/);
+  assert.match(app, /useLegacyGoogleTiles:\s*false/);
+  assert.doesNotMatch(app, /useLegacyGoogleTiles:\s*true/);
+  assert.match(app, /tile\.openstreetmap\.org/);
+  assert.match(app, /World_Imagery/);
+  assert.match(app, /tile\.opentopomap\.org/);
+  assert.doesNotMatch(`${html}\n${app}\n${css}`, /�/);
+  assert.doesNotMatch(css, /Georgia|Times New Roman|font-family:\s*serif/i);
 });
